@@ -1,15 +1,27 @@
+# this is what starts the mongo, calling dir nosql to not name conflict
+# for mongodb
 import nosql.mongo_setup as mongo_setup
+# now defining data models using mongoengine classes, class Car(mongoengine.Document)
 from nosql.car import Car
+
+# sub docs, embeded can only work thru parent, engine
+# class Engine(mongoengine.EmbeddedDocument):
 from nosql.engine import Engine
 from nosql.servicehistory import ServiceHistory
 
 
 def main():
     print_header()
+    # config mongo just calls mongo_setup which calls the mongo db init
     config_mongo()
+    # if need to update schema to old existing db entries having old schema
     # update_doc_versions()
     user_loop()
 
+
+# only run once to fix, use mark as changed to force save
+# example if an existing car did not have vin number
+# sql would have had to do sql migration big deal
 
 # noinspection PyProtectedMember
 # def update_doc_versions():
@@ -60,27 +72,44 @@ def add_car():
     make = 'Ferrari'  # input("What is the make? ")
     year = int(input("Year built? "))
 
+    # instantiate Car model from nosql.car.py
+    # each attribute below has data constraints by the types given
+
     car = Car()
     car.year = year
     car.make = make
     car.model = model
+    # video also has (early on)
+    # car.mileage (float)l
+    # car.vin
 
+    # create subdocument list within the car class
+    # dummy values
     engine = Engine()
     engine.horsepower = 590
     engine.mpg = 22
     engine.liters = 4.0
 
+    # associate the engine to the car, embedding it
+
     car.engine = engine
 
+    # save to the DB, since mongo does not have transactionsa
     car.save()
 
 
+# queries against mongo
+
+
 def list_cars():
+    # could filter as well after .objects
+
     cars = Car.objects().order_by("-year")
     for car in cars:
         print("{} -- {} with vin {} (year {})".format(
             car.make, car.model, car.vi_number, car.year))
         print("{} of service records".format(len(car.service_history)))
+        # since service history is a list since embedded on a car
         for s in car.service_history:
             print("  * ${:,.0f} {}".format(s.price, s.description))
     print()
@@ -92,6 +121,12 @@ def find_car():
 
 def service_car():
     # vin = input("What is the VIN of the car to service? ")
+
+    # this will grab a list of cars back, get the first one back,
+    # get the car or none
+    # instead also could have
+    # could do objects(filter=
+
     # car = Car.objects(vi_number=vin).first()
     # if not car:
     #     print("Car with VIN {} not found!".format(vin))

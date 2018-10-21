@@ -1,3 +1,4 @@
+# this is a dummy file that he fills out in the video
 def main():
     print_header()
     user_loop()
